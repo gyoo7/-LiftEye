@@ -1,2 +1,2 @@
-# -LiftEye
+# LiftEye
 吊耳
