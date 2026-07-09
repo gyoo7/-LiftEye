@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta content="default-src 'none'; style-src * 'unsafe-inline'; script-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:; media-src * data: blob:; connect-src 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'" http-equiv="Content-Security-Policy"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>吊耳计算校核工具</title>
+<!-- Tailwind CSS for rapid styling -->
+<script src="https://image.uc.cn/s/uae/g/3n/mos-production/0915/3.4.17.js"></script>
+<!-- Font Awesome for icons -->
+<script src="https://image.uc.cn/s/uae/g/3n/mos-production/fontawesome-free-7.1.0-web/js/all.min.js"></script>
+<link href="https://image.uc.cn/s/uae/g/3n/mos-production/fontawesome-free-7.1.0-web/css/fontawesome.min.css" rel="stylesheet"/>
+<style>
+        /* Custom styles for specific requirements */
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* Green background for fixed parameters as requested */
+        .input-fixed {
+            background-color: #d1fae5; /* Tailwind green-100 */
+            border-color: #10b981; /* Tailwind green-500 */
+        }
+
+        /* Result fields styling */
+        .input-result {
+            background-color: #f9fafb; /* Tailwind gray-50 */
+            border-color: #d1d5db; /* Tailwind gray-300 */
+            color: #374151; /* Tailwind gray-700 */
+            font-weight: 500;
+        }
+
+        /* Section headers */
+        .section-header {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Comparison text highlight */
+        .comparison-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .comparison-value {
+            font-weight: bold;
+            color: #111827;
+        }
+        .comparison-warning {
+            color: #dc2626; /* red-600 */
+            font-weight: bold;
+        }
+        .comparison-safe {
+            color: #16a34a; /* green-600 */
+            font-weight: bold;
+        }
+        
+        /* Range requirement styling */
+        .range-requirement {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .range-met {
+            color: #16a34a;
+        }
+        .range-not-met {
+            color: #dc2626;
+        }
+        
+        /* Section card styling */
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Image container */
+        .image-container {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+<!-- Main Container -->
+<main class="max-w-7xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+<!-- Header -->
+<header class="bg-blue-600 text-white p-6">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-calculator text-3xl"></i>
+<div>
+<h1 class="text-2xl font-bold">吊耳计算校核工具</h1>
+<p class="text-blue-100 text-sm mt-1">工程计算辅助系统 / Engineering Calculation Tool</p>
+</div>
+</div>
+</header>
+
+<!-- Content Grid -->
+<div class="p-6">
+
+<!-- 板块1：基本参数 -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fa-solid fa-cog text-blue-500"></i>
+        <h2>基本参数</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Q -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">Q (吊件重量)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_Q" step="0.01" type="number" value="68"/>
+                <span class="ml-2 text-gray-500 w-8">t</span>
+            </div>
+        </div>
+        <!-- K -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">K (吊耳数量)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_K" step="1" type="number" value="4"/>
+                <span class="ml-2 text-gray-500 w-8">个</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 板块2：吊耳几何尺寸 -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fa-solid fa-ruler-combined text-green-500"></i>
+        <h2>吊耳几何尺寸</h2>
+    </div>
+    <!-- 吊耳结构示意图 -->
+    <div class="image-container">
+        <img src="https://agent.qianwen.com/mos/0d4fa25470ca414fbb80577c068e1382/77af07dcc6e836fd8caae7656c9a0eef" alt="吊耳结构示意图" title="吊耳结构示意图"/>
+        <p class="text-gray-500 text-sm mt-2">吊耳结构示意图（含a, b, t, d0, R等关键尺寸标注）</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- a -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">a (孔边距)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_a" step="0.01" type="number" value="90"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- b -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">b (侧边距)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_b" step="0.01" type="number" value="80"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- t -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">t (板厚)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_t" step="0.01" type="number" value="58"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- L -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">L (吊耳长度)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_L" step="0.01" type="number" value="440"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- R -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">R (耳板半径)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_R" step="0.01" type="number" value="130"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- d0 -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">d0 (孔径)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_d0" step="0.01" type="number" value="110"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- d -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">d (销轴径)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_d" step="0.01" type="number" value="70"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- Lw -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">Lw (焊缝长)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_Lw" step="0.01" type="number" value="880"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+        <!-- h -->
+        <div class="flex items-center border-b border-gray-100 pb-2">
+            <label class="w-40 text-gray-600 font-medium">h (焊缝高)</label>
+            <div class="flex-1 flex items-center">
+                <input class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_h" step="0.01" type="number" value="15"/>
+                <span class="ml-2 text-gray-500 w-8">mm</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 板块3：材料强度常量 -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fa-solid fa-layer-group text-purple-500"></i>
+        <h2>材料强度常量</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 font-medium">f (抗拉/压/弯)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-fixed w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_f" step="0.01" type="number" value="295"/>
+                <span class="ml-2 text-gray-500 w-16">N/mm²</span>
+            </div>
+        </div>
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 font-medium">fv (抗剪)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-fixed w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none transition" id="input_fv" step="0.01" type="number" value="170"/>
+                <span class="ml-2 text-gray-500 w-16">N/mm²</span>
+            </div>
+        </div>
+    </div>
+    <p class="text-gray-500 text-sm mt-2"><i class="fa-solid fa-info-circle text-blue-500 mr-1"></i>默认值基于Q355钢，厚度大于16mm。可根据实际材料修改。</p>
+</div>
+
+<!-- 板块4：尺寸比例校核 -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fa-solid fa-scale-balanced text-orange-500"></i>
+        <h2>尺寸比例校核</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- U -->
+        <div class="flex items-center">
+            <label class="w-24 text-gray-600 text-sm">U (侧厚比)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_U" readonly="" type="text"/>
+                <span class="ml-2 range-requirement w-16" id="range_U">&lt;4</span>
+            </div>
+        </div>
+        <!-- V -->
+        <div class="flex items-center">
+            <label class="w-24 text-gray-600 text-sm">V (孔宽比)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_V" readonly="" type="text"/>
+                <span class="ml-2 range-requirement w-16" id="range_V">≥1.333</span>
+            </div>
+        </div>
+        <!-- W -->
+        <div class="flex items-center">
+            <label class="w-24 text-gray-600 text-sm">W (侧宽比)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_W" readonly="" type="text"/>
+                <span class="ml-2 range-requirement w-16" id="range_W">≥1</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 板块5：强度计算 -->
+<div class="section-card">
+    <div class="section-header">
+        <i class="fa-solid fa-chart-simple text-indigo-500"></i>
+        <h2>强度计算</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <!-- N -->
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 text-sm">N (单个起重量)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_N" readonly="" type="text"/>
+                <span class="ml-2 text-gray-500 text-xs w-12">N</span>
+            </div>
+        </div>
+        <!-- be -->
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 text-sm">be (有效宽度)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_be" readonly="" type="text"/>
+                <span class="ml-2 text-gray-500 text-xs w-12">mm</span>
+            </div>
+        </div>
+        <!-- b1 -->
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 text-sm">b1 (计算宽度)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_b1" readonly="" type="text"/>
+                <span class="ml-2 text-gray-500 text-xs w-12">mm</span>
+            </div>
+        </div>
+        <!-- Z -->
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 text-sm">Z (抗剪面宽)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_Z" readonly="" type="text"/>
+                <span class="ml-2 text-gray-500 text-xs w-12">mm</span>
+            </div>
+        </div>
+        <!-- sigma1 -->
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 text-sm">σ1 (孔净载抗拉)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_sigma1" readonly="" type="text"/>
+                <span class="ml-2 text-gray-500 text-xs w-12">N/mm²</span>
+            </div>
+        </div>
+        <!-- sigma2 -->
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 text-sm">σ2 (端部抗拉)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_sigma2" readonly="" type="text"/>
+                <span class="ml-2 text-gray-500 text-xs w-12">N/mm²</span>
+            </div>
+        </div>
+        <!-- tau -->
+        <div class="flex items-center">
+            <label class="w-40 text-gray-600 text-sm">τ (抗剪强度)</label>
+            <div class="flex-1 flex items-center">
+                <input class="input-result w-full p-1.5 text-sm border rounded bg-white" id="res_tau" readonly="" type="text"/>
+                <span class="ml-2 text-gray-500 text-xs w-12">N/mm²</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 板块6：安全系数校核 -->
+<div class="section-card bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200">
+    <div class="section-header border-indigo-300">
+        <i class="fa-solid fa-check-double text-indigo-600"></i>
+        <h2>安全系数校核</h2>
+    </div>
+    <div class="space-y-4">
+        <!-- 孔净截面抗拉安全系数 -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-indigo-200 pb-2">
+            <span class="text-gray-700 font-medium">孔净截面抗拉安全系数 (γ₁)</span>
+            <div class="comparison-text mt-1 sm:mt-0">
+                γ₁ = f/σ₁ = <span class="comparison-value" id="comp_sigma1">0.00</span>
+                <span class="mx-2 text-indigo-400">|</span>
+                <span class="text-indigo-700">应在2-5之间</span>
+                <span id="status_sigma1"></span>
+            </div>
+        </div>
+        <!-- 端部截面抗拉安全系数 -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-indigo-200 pb-2">
+            <span class="text-gray-700 font-medium">端部截面抗拉安全系数 (γ₂)</span>
+            <div class="comparison-text mt-1 sm:mt-0">
+                γ₂ = f/σ₂ = <span class="comparison-value" id="comp_sigma2">0.00</span>
+                <span class="mx-2 text-indigo-400">|</span>
+                <span class="text-indigo-700">应在2-5之间</span>
+                <span id="status_sigma2"></span>
+            </div>
+        </div>
+        <!-- 抗剪安全系数 -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between">
+            <span class="text-gray-700 font-medium">抗剪安全系数 (γ₃)</span>
+            <div class="comparison-text mt-1 sm:mt-0">
+                γ₃ = fv/τ = <span class="comparison-value" id="comp_tau">0.00</span>
+                <span class="mx-2 text-indigo-400">|</span>
+                <span class="text-indigo-700">应在2-5之间</span>
+                <span id="status_tau"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- Footer -->
+<footer class="bg-gray-100 p-4 text-center text-gray-500 text-sm border-t">
+<p>© 2026 吊耳计算校核工具 | 严格按照工程规范计算</p>
+</footer>
+</main>
+
+<!-- Calculation Logic Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all input elements
+            const inputs = {
+                Q: document.getElementById('input_Q'),
+                K: document.getElementById('input_K'),
+                a: document.getElementById('input_a'),
+                b: document.getElementById('input_b'),
+                t: document.getElementById('input_t'),
+                L: document.getElementById('input_L'),
+                R: document.getElementById('input_R'),
+                d0: document.getElementById('input_d0'),
+                d: document.getElementById('input_d'),
+                Lw: document.getElementById('input_Lw'),
+                h: document.getElementById('input_h'),
+                f: document.getElementById('input_f'),
+                fv: document.getElementById('input_fv')
+            };
+
+            // Select all result elements
+            const results = {
+                N: document.getElementById('res_N'),
+                U: document.getElementById('res_U'),
+                be: document.getElementById('res_be'),
+                V: document.getElementById('res_V'),
+                W: document.getElementById('res_W'),
+                b1: document.getElementById('res_b1'),
+                Z: document.getElementById('res_Z'),
+                sigma1: document.getElementById('res_sigma1'),
+                sigma2: document.getElementById('res_sigma2'),
+                tau: document.getElementById('res_tau'),
+                comp_sigma1: document.getElementById('comp_sigma1'),
+                comp_sigma2: document.getElementById('comp_sigma2'),
+                comp_tau: document.getElementById('comp_tau'),
+                status_sigma1: document.getElementById('status_sigma1'),
+                status_sigma2: document.getElementById('status_sigma2'),
+                status_tau: document.getElementById('status_tau'),
+                range_U: document.getElementById('range_U'),
+                range_V: document.getElementById('range_V'),
+                range_W: document.getElementById('range_W')
+            };
+
+            // Main calculation function
+            function calculate() {
+                // Parse inputs, default to 0 if empty
+                const Q = parseFloat(inputs.Q.value) || 0;
+                const K = parseFloat(inputs.K.value) || 0;
+                const a = parseFloat(inputs.a.value) || 0;
+                const b = parseFloat(inputs.b.value) || 0;
+                const t = parseFloat(inputs.t.value) || 0;
+                const L = parseFloat(inputs.L.value) || 0;
+                const R = parseFloat(inputs.R.value) || 0;
+                const d0 = parseFloat(inputs.d0.value) || 0;
+                const d = parseFloat(inputs.d.value) || 0;
+                const Lw = parseFloat(inputs.Lw.value) || 0;
+                const h = parseFloat(inputs.h.value) || 0;
+                // f和fv改为从输入框读取
+                const f = parseFloat(inputs.f.value) || 295;
+                const fv = parseFloat(inputs.fv.value) || 170;
+
+                // 1. N = Q × 1000 × 10 / 3 (Unit: N)
+                // Note: Q is in tons (t). 1t = 1000kg. g approx 10N/kg. 
+                // Formula provided: N = Q * 1000 * 10 / 3.
+                const N = (Q * 9800) / (K-1);
+
+                // 2. be = 2t + 16
+                const be = (2 * t) + 16;
+
+                // 3. b1 = min(be, b - d0/3)
+                const val_b_minus_d0_3 = b - (d0 / 3);
+                const b1 = Math.min((2*t + 16), (b - d0/3));
+
+                // 4. Z = √(R² + d0²/11)
+                const Z = Math.sqrt((a + d0/2) * (a + d0/2) - (d0/2) * (d0/2));
+
+                // 5. σ1 = N / (2 × b1 × t)
+                const sigma1 = N / 2 / t / b1;
+
+                // 6. σ2 = N / ((b1 - d0/11) × t)
+                const sigma2 = N / 2 / t / (a - 2*d0/3);
+
+                // 7. τ = N / (2 × Z × t)
+                const tau = N / (2 * Z * t);
+
+                // Ratios - 修正后的公式
+                // U = b / t (原为 a / t)
+                const U = t !== 0 ? b / t : 0;
+                // V = a / be (原为 d0 / be)
+                const V = be !== 0 ? a / be : 0;
+                // W = b / be (正确)
+                const W = be !== 0 ? b / be : 0;
+
+                // Update UI with specific precision requirements
+                results.N.value = N.toFixed(2); // 2 decimals
+                results.U.value = U.toFixed(4); // 4 decimals
+                results.be.value = be.toFixed(2); // 2 decimals
+                results.V.value = V.toFixed(4); // 4 decimals
+                results.W.value = W.toFixed(4); // 4 decimals
+                results.b1.value = b1.toFixed(2); // 2 decimals
+                results.Z.value = Z.toFixed(2); // 2 decimals
+                results.sigma1.value = sigma1.toFixed(2); // 2 decimals
+                results.sigma2.value = sigma2.toFixed(2); // 2 decimals
+                results.tau.value = tau.toFixed(3); // 3 decimals
+
+                // 修正后的安全系数计算逻辑：f/sigma 而非 sigma/f
+                const comp1 = sigma1 !== 0 ? (f / sigma1) : 0;
+                const comp2 = sigma2 !== 0 ? (f / sigma2) : 0;
+                const comp3 = tau !== 0 ? (fv / tau) : 0;
+
+                results.comp_sigma1.textContent = comp1.toFixed(2);
+                results.comp_sigma2.textContent = comp2.toFixed(2);
+                results.comp_tau.textContent = comp3.toFixed(2);
+                
+                // 更新范围要求的颜色状态
+                updateRangeStatus(U, V, W);
+                
+                // 更新安全系数状态
+                updateSafetyStatus(comp1, comp2, comp3);
+            }
+            
+            // 更新范围要求的颜色状态
+            function updateRangeStatus(U, V, W) {
+                // U < 4 为合格
+                if (U < 4) {
+                    results.range_U.className = 'ml-2 range-requirement w-16 range-met';
+                } else {
+                    results.range_U.className = 'ml-2 range-requirement w-16 range-not-met';
+                }
+                
+                // V >= 1.333 为合格
+                if (V >= 1.333) {
+                    results.range_V.className = 'ml-2 range-requirement w-16 range-met';
+                } else {
+                    results.range_V.className = 'ml-2 range-requirement w-16 range-not-met';
+                }
+                
+                // W >= 1 为合格
+                if (W >= 1) {
+                    results.range_W.className = 'ml-2 range-requirement w-16 range-met';
+                } else {
+                    results.range_W.className = 'ml-2 range-requirement w-16 range-not-met';
+                }
+            }
+            
+            // 更新安全系数状态
+            function updateSafetyStatus(comp1, comp2, comp3) {
+                // 判断是否在2-5之间
+                const checkStatus = (value) => {
+                    if (value >= 2 && value <= 5) {
+                        return '<span class="comparison-safe ml-2"><i class="fa-solid fa-check-circle"></i> 安全</span>';
+                    } else if (value < 2) {
+                        return '<span class="comparison-warning ml-2"><i class="fa-solid fa-exclamation-triangle"></i> 不足</span>';
+                    } else {
+                        return '<span class="comparison-safe ml-2"><i class="fa-solid fa-check-circle"></i> 安全</span>';
+                    }
+                };
+                
+                results.status_sigma1.innerHTML = checkStatus(comp1);
+                results.status_sigma2.innerHTML = checkStatus(comp2);
+                results.status_tau.innerHTML = checkStatus(comp3);
+            }
+
+            // Attach event listeners to all inputs for real-time calculation
+            Object.values(inputs).forEach(input => {
+                input.addEventListener('input', calculate);
+            });
+
+            // Initial calculation on load
+            calculate();
+        });
+    </script>
+</body>
+</html>
